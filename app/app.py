@@ -45,27 +45,45 @@ if analyze:
     enriched_data = calculate_bollinger_bands(enriched_data)
     enriched_data = add_volume_features(enriched_data)
 
+    # Company Overview
     st.subheader("Company Overview")
+
+    current_price = company_info.get("current_price")
+    market_cap = company_info.get("market_cap")
+    high_52 = company_info.get("52_week_high")
+    low_52 = company_info.get("52_week_low")
+    company_name = company_info.get("name") or ticker.upper()
+    sector = company_info.get("sector", "N/A")
+    industry = company_info.get("industry", "N/A")
+    description = company_info.get("description", "No description available.")
+
+    # Fallbacks from stock_data if Yahoo company info is missing
+    if current_price is None and not stock_data.empty and "Close" in stock_data.columns:
+        current_price = round(float(stock_data["Close"].iloc[-1]), 2)
+
+    if high_52 is None and not stock_data.empty and "High" in stock_data.columns:
+        high_52 = round(float(stock_data["High"].max()), 2)
+
+    if low_52 is None and not stock_data.empty and "Low" in stock_data.columns:
+        low_52 = round(float(stock_data["Low"].min()), 2)
 
     col1, col2, col3, col4 = st.columns(4)
 
-    col1.metric("Current Price", f"${company_info.get('current_price', 'N/A')}")
-    col2.metric(
-        "Market Cap",
-        f"{company_info.get('market_cap'):,}" if company_info.get("market_cap") else "N/A"
-    )
-    col3.metric("52 Week High", f"${company_info.get('52_week_high', 'N/A')}")
-    col4.metric("52 Week Low", f"${company_info.get('52_week_low', 'N/A')}")
+    col1.metric("Current Price", f"${current_price}" if current_price is not None else "N/A")
+    col2.metric("Market Cap", f"{market_cap:,}" if market_cap else "N/A")
+    col3.metric("52 Week High", f"${high_52}" if high_52 is not None else "N/A")
+    col4.metric("52 Week Low", f"${low_52}" if low_52 is not None else "N/A")
 
-    st.write(f"**Company Name:** {company_info.get('name', 'N/A')}")
-    st.write(f"**Sector:** {company_info.get('sector', 'N/A')}")
-    st.write(f"**Industry:** {company_info.get('industry', 'N/A')}")
+    st.write(f"**Company Name:** {company_name}")
+    st.write(f"**Sector:** {sector}")
+    st.write(f"**Industry:** {industry}")
 
     with st.expander("Business Description"):
-        st.write(company_info.get("description", "No description available."))
+        st.write(description)
 
     st.markdown("---")
 
+    # Charts
     st.subheader("Charts")
 
     st.write("Price & Moving Averages")
@@ -85,6 +103,7 @@ if analyze:
 
     st.markdown("---")
 
+    # Latest Indicator Values
     st.subheader("Latest Indicator Values")
 
     latest_row = enriched_data.iloc[-1]
@@ -126,6 +145,7 @@ if analyze:
 
     st.markdown("---")
 
+    # Historical Data Table
     st.subheader("Recent Historical Market Data")
 
     historical_df = enriched_data.copy()
@@ -143,6 +163,7 @@ if analyze:
 
     st.markdown("---")
 
+    # Signals
     signal_summary = generate_signal_summary(enriched_data)
 
     st.subheader("Signal Summary")
@@ -167,6 +188,7 @@ if analyze:
 
     st.markdown("---")
 
+    # Predictions
     X_1d, y_1d, df_1d = prepare_prediction_data(enriched_data, horizon=1)
     model_1d, acc_1d = train_prediction_model(X_1d, y_1d)
     pred_1d = predict_direction(model_1d, df_1d, "Next Day")
@@ -197,6 +219,7 @@ if analyze:
 
     st.markdown("---")
 
+    # Sentiment
     headlines = fetch_news_headlines(ticker)
     sentiment = analyze_sentiment_simple(headlines)
 
@@ -213,6 +236,7 @@ if analyze:
 
     st.markdown("---")
 
+    # AI Explanation
     st.subheader("AI Explanation")
 
     explanation = generate_llm_explanation(
