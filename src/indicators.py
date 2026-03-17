@@ -30,5 +30,34 @@ def add_technical_indicators(data):
     df["MACD"] = macd.macd()
     df["MACD_Signal"] = macd.macd_signal()
     df["MACD_Hist"] = macd.macd_diff()
+    return df
+
+def calculate_bollinger_bands(data, window=20):
+    """
+    Calculate Bollinger Bands (Upper, Middle, Lower)
+    """
+
+    df = data.copy()
+
+    df["BB_Middle"] = df["Close"].rolling(window=window).mean()
+    df["BB_Std"] = df["Close"].rolling(window=window).std()
+
+    df["BB_Upper"] = df["BB_Middle"] + (2 * df["BB_Std"])
+    df["BB_Lower"] = df["BB_Middle"] - (2 * df["BB_Std"])
 
     return df
+
+def add_volume_features(data):
+    """
+    Add volume-based indicators
+    """
+
+    df = data.copy()
+
+    df["Volume_MA_20"] = df["Volume"].rolling(window=20).mean()
+    df["Volume_Change"] = df["Volume"].pct_change()
+
+    return df
+
+
+
