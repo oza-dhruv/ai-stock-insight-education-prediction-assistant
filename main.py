@@ -1,7 +1,7 @@
 from src.data_loader import fetch_stock_data, fetch_company_info
 from src.indicators import add_technical_indicators
 from src.signal_engine import generate_signal_summary
-
+from src.visualization import plot_price_with_moving_averages
 
 def main():
     ticker = "NVDA"
@@ -23,7 +23,7 @@ def main():
 
     print("\nSignal Summary:")
     print(signal_summary)
-
+    plot_price_with_moving_averages(enriched_data, ticker)
 
 if __name__ == "__main__":
     main()
