@@ -5,14 +5,14 @@ from src.indicators import (
     add_volume_features
 )
 from src.signal_engine import generate_signal_summary
-from src.visualization import plot_price_with_moving_averages, plot_bollinger_bands
+from src.visualization import plot_price_with_moving_averages, plot_bollinger_bands, plot_rsi,plot_macd
 from src.prediction import prepare_prediction_data, train_prediction_model, predict_direction
 from src.sentiment import fetch_news_headlines, analyze_sentiment_simple
 
 
 
 def main():
-    ticker = "TSLA"
+    ticker = "AVGO"
 
     print(f"\nFetching data for {ticker}...\n")
 
@@ -24,7 +24,7 @@ def main():
 
     enriched_data = add_technical_indicators(stock_data)
     enriched_data = calculate_bollinger_bands(enriched_data)
-    enriched_data = add_volume_features(enriched_data)  
+    enriched_data = add_volume_features(enriched_data) 
 
     print("\nStock Data with Indicators:")
     print(
@@ -52,6 +52,8 @@ def main():
     print(signal_summary)
     plot_price_with_moving_averages(enriched_data, ticker)
     plot_bollinger_bands(enriched_data, ticker)
+    plot_rsi(enriched_data, ticker)
+    plot_macd(enriched_data, ticker)
 
     # Next-day prediction
     X_1d, y_1d, prediction_df_1d = prepare_prediction_data(enriched_data, horizon=1)
@@ -87,3 +89,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

@@ -90,3 +90,63 @@ def plot_bollinger_bands(data, ticker):
     )
 
     fig.show()
+
+def plot_rsi(data, ticker):
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Scatter(
+            x=data.index,
+            y=data["RSI_14"],
+            mode="lines",
+            name="RSI 14"
+        )
+    )
+
+    fig.add_hline(y=70, line_dash="dash", annotation_text="Overbought (70)")
+    fig.add_hline(y=30, line_dash="dash", annotation_text="Oversold (30)")
+
+    fig.update_layout(
+        title=f"{ticker} RSI (14)",
+        xaxis_title="Date",
+        yaxis_title="RSI"
+    )
+
+    fig.show()
+
+def plot_macd(data, ticker):
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Scatter(
+            x=data.index,
+            y=data["MACD"],
+            mode="lines",
+            name="MACD"
+        )
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=data.index,
+            y=data["MACD_Signal"],
+            mode="lines",
+            name="MACD Signal"
+        )
+    )
+
+    fig.add_trace(
+        go.Bar(
+            x=data.index,
+            y=data["MACD_Hist"],
+            name="MACD Histogram"
+        )
+    )
+
+    fig.update_layout(
+        title=f"{ticker} MACD",
+        xaxis_title="Date",
+        yaxis_title="MACD"
+    )
+
+    fig.show()
