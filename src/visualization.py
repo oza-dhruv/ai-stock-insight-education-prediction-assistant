@@ -150,3 +150,31 @@ def plot_macd(data, ticker):
     )
 
     fig.show()
+
+def plot_volume(data, ticker):
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Bar(
+            x=data.index,
+            y=data["Volume"],
+            name="Daily Volume"
+        )
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=data.index,
+            y=data["Volume_MA_20"],
+            mode="lines",
+            name="Volume MA 20"
+        )
+    )
+
+    fig.update_layout(
+        title=f"{ticker} Trading Volume",
+        xaxis_title="Date",
+        yaxis_title="Volume"
+    )
+
+    fig.show()

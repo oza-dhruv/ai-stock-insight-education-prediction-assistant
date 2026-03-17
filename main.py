@@ -5,11 +5,10 @@ from src.indicators import (
     add_volume_features
 )
 from src.signal_engine import generate_signal_summary
-from src.visualization import plot_price_with_moving_averages, plot_bollinger_bands, plot_rsi,plot_macd
+from src.visualization import plot_price_with_moving_averages, plot_bollinger_bands, plot_rsi,plot_macd,plot_volume
 from src.prediction import prepare_prediction_data, train_prediction_model, predict_direction
 from src.sentiment import fetch_news_headlines, analyze_sentiment_simple
-
-
+from src.llm_explainer import generate_llm_explanation
 
 def main():
     ticker = "AVGO"
@@ -54,6 +53,7 @@ def main():
     plot_bollinger_bands(enriched_data, ticker)
     plot_rsi(enriched_data, ticker)
     plot_macd(enriched_data, ticker)
+    plot_volume(enriched_data, ticker)
 
     # Next-day prediction
     X_1d, y_1d, prediction_df_1d = prepare_prediction_data(enriched_data, horizon=1)
@@ -86,6 +86,18 @@ def main():
 
     print("\nSentiment Summary:")
     print(sentiment_summary)
+
+    llm_explanation = generate_llm_explanation(
+        ticker,
+        company_info,
+        signal_summary,
+        next_day_prediction,
+        next_5_day_prediction,
+        sentiment_summary
+    )
+
+    print("\nAI Explanation:\n")
+    print(llm_explanation)
 
 if __name__ == "__main__":
     main()
