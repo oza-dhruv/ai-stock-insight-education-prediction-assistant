@@ -42,7 +42,7 @@ def plot_price_with_moving_averages(data, ticker):
         template="plotly_dark"
     )
 
-    fig.show()
+    return fig
 
 def plot_bollinger_bands(data, ticker):
     fig = go.Figure()
@@ -89,7 +89,7 @@ def plot_bollinger_bands(data, ticker):
         yaxis_title="Price"
     )
 
-    fig.show()
+    return fig
 
 def plot_rsi(data, ticker):
     fig = go.Figure()
@@ -112,7 +112,7 @@ def plot_rsi(data, ticker):
         yaxis_title="RSI"
     )
 
-    fig.show()
+    return fig
 
 def plot_macd(data, ticker):
     fig = go.Figure()
@@ -149,7 +149,7 @@ def plot_macd(data, ticker):
         yaxis_title="MACD"
     )
 
-    fig.show()
+    return fig
 
 def plot_volume(data, ticker):
     fig = go.Figure()
@@ -177,4 +177,4 @@ def plot_volume(data, ticker):
         yaxis_title="Volume"
     )
 
-    fig.show()
+    return fig
