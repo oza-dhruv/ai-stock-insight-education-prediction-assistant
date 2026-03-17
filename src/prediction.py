@@ -4,24 +4,56 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
 
-def prepare_prediction_data(data):
+FEATURE_COLUMNS = [
+    "Close",
+    "Volume",
+    "SMA_20",
+    "EMA_20",
+    "RSI_14",
+    "MACD",
+    "MACD_Signal",
+    "MACD_Hist",
+    "Return_1D",
+    "Return_5D",
+    "Volatility_5D",
+    "Price_vs_SMA20",
+    "Price_vs_EMA20",
+    "Volume_Change"
+]
+
+
+def add_prediction_features(data):
     """
-    Prepare features and target for next-day direction prediction.
+    Add extra model features to improve prediction quality.
     """
 
     df = data.copy()
 
-    # Daily return
-    df["Return"] = df["Close"].pct_change()
+    df["Return_1D"] = df["Close"].pct_change()
+    df["Return_5D"] = df["Close"].pct_change(periods=5)
+    df["Volatility_5D"] = df["Return_1D"].rolling(window=5).std()
+    df["Price_vs_SMA20"] = (df["Close"] - df["SMA_20"]) / df["SMA_20"]
+    df["Price_vs_EMA20"] = (df["Close"] - df["EMA_20"]) / df["EMA_20"]
+    df["Volume_Change"] = df["Volume"].pct_change()
 
-    # Target: 1 if next day's close is higher, else 0
-    df["Target"] = (df["Close"].shift(-1) > df["Close"]).astype(int)
+    return df
 
-    # Drop rows with missing values
+
+def prepare_prediction_data(data, horizon=1):
+    """
+    Prepare features and target for stock direction prediction.
+
+    horizon=1  -> next day direction
+    horizon=5  -> next 5 day direction
+    """
+
+    df = add_prediction_features(data)
+
+    df["Target"] = (df["Close"].shift(-horizon) > df["Close"]).astype(int)
+
     df = df.dropna()
 
-    features = ["Close", "Volume", "SMA_20", "EMA_20", "RSI_14", "MACD", "MACD_Signal", "MACD_Hist", "Return"]
-    X = df[features]
+    X = df[FEATURE_COLUMNS]
     y = df["Target"]
 
     return X, y, df
@@ -36,7 +68,14 @@ def train_prediction_model(X, y):
         X, y, test_size=0.2, shuffle=False
     )
 
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    model = RandomForestClassifier(
+        n_estimators=200,
+        max_depth=8,
+        min_samples_split=10,
+        min_samples_leaf=4,
+        random_state=42
+    )
+
     model.fit(X_train, y_train)
 
     predictions = model.predict(X_test)
@@ -45,17 +84,18 @@ def train_prediction_model(X, y):
     return model, accuracy
 
 
-def predict_next_day_direction(model, df):
+def predict_direction(model, df, horizon_label="Next Day"):
     """
-    Predict the next day's direction using the latest available row.
+    Predict stock direction using the latest available row.
     """
 
-    latest_features = df[["Close", "Volume", "SMA_20", "EMA_20", "RSI_14", "MACD", "MACD_Signal", "MACD_Hist", "Return"]].iloc[[-1]]
+    latest_features = df[FEATURE_COLUMNS].iloc[[-1]]
     prediction = model.predict(latest_features)[0]
     probabilities = model.predict_proba(latest_features)[0]
 
     return {
+        "horizon": horizon_label,
         "prediction": "Bullish" if prediction == 1 else "Bearish",
-        "probability_down": round(probabilities[0] * 100, 2),
-        "probability_up": round(probabilities[1] * 100, 2)
+        "probability_down": float(round(probabilities[0] * 100, 2)),
+        "probability_up": float(round(probabilities[1] * 100, 2))
     }
