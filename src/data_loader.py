@@ -27,10 +27,19 @@ def fetch_stock_data(ticker, period="6mo"):
 
             data = data.reset_index()
 
-            # Keep only expected columns if present
+            # Keep only the columns the app needs
             expected_cols = ["Date", "Open", "High", "Low", "Close", "Volume"]
             available_cols = [col for col in expected_cols if col in data.columns]
             data = data[available_cols].copy()
+
+            # Make sure numeric columns are numeric
+            for col in ["Open", "High", "Low", "Close", "Volume"]:
+                if col in data.columns:
+                    data[col] = pd.to_numeric(data[col], errors="coerce")
+
+            # Drop rows where Close is missing
+            if "Close" in data.columns:
+                data = data.dropna(subset=["Close"])
 
             return data
 
@@ -55,6 +64,20 @@ def fetch_company_info(ticker):
     try:
         stock = yf.Ticker(ticker)
         info = stock.info
-        return info if info else {}
+
+        if not info:
+            return {}
+
+        return {
+            "name": info.get("longName") or info.get("shortName") or ticker,
+            "sector": info.get("sector", "N/A"),
+            "industry": info.get("industry", "N/A"),
+            "description": info.get("longBusinessSummary", "No description available."),
+            "current_price": info.get("currentPrice") or info.get("regularMarketPrice"),
+            "market_cap": info.get("marketCap"),
+            "52_week_high": info.get("fiftyTwoWeekHigh"),
+            "52_week_low": info.get("fiftyTwoWeekLow"),
+        }
+
     except Exception:
         return {}
