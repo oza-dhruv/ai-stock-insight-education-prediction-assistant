@@ -5,7 +5,7 @@ from src.indicators import (
     add_volume_features
 )
 from src.signal_engine import generate_signal_summary
-from src.visualization import plot_price_with_moving_averages
+from src.visualization import plot_price_with_moving_averages, plot_bollinger_bands
 from src.prediction import prepare_prediction_data, train_prediction_model, predict_direction
 from src.sentiment import fetch_news_headlines, analyze_sentiment_simple
 
@@ -51,6 +51,7 @@ def main():
     print("\nSignal Summary:")
     print(signal_summary)
     plot_price_with_moving_averages(enriched_data, ticker)
+    plot_bollinger_bands(enriched_data, ticker)
 
     # Next-day prediction
     X_1d, y_1d, prediction_df_1d = prepare_prediction_data(enriched_data, horizon=1)
