@@ -2,7 +2,11 @@ import pandas as pd
 from ta.trend import SMAIndicator, EMAIndicator, MACD
 from ta.momentum import RSIIndicator
 
+df = df.copy()
 
+if isinstance(df.columns, pd.MultiIndex):
+    df.columns = [col[0] for col in df.columns]
+    
 def add_technical_indicators(data):
     """
     Add technical indicators to stock price data.
