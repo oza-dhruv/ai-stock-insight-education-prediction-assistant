@@ -29,38 +29,33 @@ st.set_page_config(page_title="AI Stock Assistant", layout="wide")
 st.title("AI Powered Stock Insight, Education, and Prediction Assistant")
 st.markdown("---")
 
-
 ticker = st.text_input("Enter Stock Ticker (e.g., TSLA, AAPL, NVDA):", "TSLA")
 analyze = st.button("Analyze Stock")
 
-if st.button("Analyze"):
-    st.write(f"### Analyzing {ticker}...")
+if analyze:
+    stock_data = fetch_stock_data(ticker)
 
-    # Data
-    if analyze:
-        stock_data = fetch_stock_data(ticker)
+    if stock_data.empty:
+        st.warning("Could not load stock data right now. Yahoo Finance may be temporarily rate limiting requests.")
+        st.stop()
 
-        if stock_data.empty:
-            st.warning("Could not load stock data right now. Yahoo Finance may be temporarily rate limiting requests.")
-            st.stop()
     company_info = fetch_company_info(ticker)
 
     enriched_data = add_technical_indicators(stock_data)
     enriched_data = calculate_bollinger_bands(enriched_data)
     enriched_data = add_volume_features(enriched_data)
 
-    # Company Overview
     st.subheader("Company Overview")
 
     col1, col2, col3, col4 = st.columns(4)
 
-    col1.metric("Current Price", f"${company_info.get('current_price')}")
+    col1.metric("Current Price", f"${company_info.get('current_price', 'N/A')}")
     col2.metric(
         "Market Cap",
         f"{company_info.get('market_cap'):,}" if company_info.get("market_cap") else "N/A"
     )
-    col3.metric("52 Week High", f"${company_info.get('52_week_high')}")
-    col4.metric("52 Week Low", f"${company_info.get('52_week_low')}")
+    col3.metric("52 Week High", f"${company_info.get('52_week_high', 'N/A')}")
+    col4.metric("52 Week Low", f"${company_info.get('52_week_low', 'N/A')}")
 
     st.write(f"**Company Name:** {company_info.get('name', 'N/A')}")
     st.write(f"**Sector:** {company_info.get('sector', 'N/A')}")
@@ -71,7 +66,6 @@ if st.button("Analyze"):
 
     st.markdown("---")
 
-    # Charts
     st.subheader("Charts")
 
     st.write("Price & Moving Averages")
@@ -91,7 +85,6 @@ if st.button("Analyze"):
 
     st.markdown("---")
 
-    # Latest Indicator Values
     st.subheader("Latest Indicator Values")
 
     latest_row = enriched_data.iloc[-1]
@@ -133,10 +126,12 @@ if st.button("Analyze"):
 
     st.markdown("---")
 
-    # Historical Data Table
     st.subheader("Recent Historical Market Data")
 
-    historical_df = enriched_data.reset_index().copy()
+    historical_df = enriched_data.copy()
+
+    if "Date" not in historical_df.columns:
+        historical_df = historical_df.reset_index()
 
     if "Date" in historical_df.columns:
         historical_df["Date"] = historical_df["Date"].astype(str)
@@ -144,14 +139,10 @@ if st.button("Analyze"):
     display_columns = ["Date", "Open", "High", "Low", "Close", "Volume"]
     available_columns = [col for col in display_columns if col in historical_df.columns]
 
-    st.dataframe(
-        historical_df[available_columns].tail(30),
-        use_container_width=True
-    )
+    st.dataframe(historical_df[available_columns].tail(30), use_container_width=True)
 
     st.markdown("---")
 
-    # Signals
     signal_summary = generate_signal_summary(enriched_data)
 
     st.subheader("Signal Summary")
@@ -176,7 +167,6 @@ if st.button("Analyze"):
 
     st.markdown("---")
 
-    # Predictions
     X_1d, y_1d, df_1d = prepare_prediction_data(enriched_data, horizon=1)
     model_1d, acc_1d = train_prediction_model(X_1d, y_1d)
     pred_1d = predict_direction(model_1d, df_1d, "Next Day")
@@ -207,7 +197,6 @@ if st.button("Analyze"):
 
     st.markdown("---")
 
-    # Sentiment
     headlines = fetch_news_headlines(ticker)
     sentiment = analyze_sentiment_simple(headlines)
 
@@ -224,7 +213,6 @@ if st.button("Analyze"):
 
     st.markdown("---")
 
-    # AI Explanation
     st.subheader("AI Explanation")
 
     explanation = generate_llm_explanation(
