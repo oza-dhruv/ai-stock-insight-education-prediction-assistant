@@ -29,13 +29,20 @@ st.set_page_config(page_title="AI Stock Assistant", layout="wide")
 st.title("AI Powered Stock Insight, Education, and Prediction Assistant")
 st.markdown("---")
 
+
 ticker = st.text_input("Enter Stock Ticker (e.g., TSLA, AAPL, NVDA):", "TSLA")
+analyze = st.button("Analyze Stock")
 
 if st.button("Analyze"):
     st.write(f"### Analyzing {ticker}...")
 
     # Data
+    if analyze:
     stock_data = fetch_stock_data(ticker)
+
+    if stock_data.empty:
+        st.warning("Could not load stock data right now. Yahoo Finance may be temporarily rate limiting requests.")
+        st.stop()
     company_info = fetch_company_info(ticker)
 
     enriched_data = add_technical_indicators(stock_data)

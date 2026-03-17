@@ -1,50 +1,48 @@
-import yfinance as yf
+import time
 import pandas as pd
+import yfinance as yf
+import streamlit as st
 
 
-def fetch_stock_data(ticker, period="1y"):
-    """
-    Fetch historical stock data for a given ticker.
+@st.cache_data(ttl=1800, show_spinner=False)
+def fetch_stock_data(ticker, period="6mo"):
+    ticker = ticker.strip().upper()
 
-    Parameters:
-        ticker (str): Stock ticker symbol (e.g., AAPL)
-        period (str): Time range of data (e.g., 1y, 6mo, 3mo)
+    for attempt in range(3):
+        try:
+            data = yf.download(
+                ticker,
+                period=period,
+                progress=False,
+                auto_adjust=False,
+                threads=False
+            )
 
-    Returns:
-        pandas.DataFrame: Stock price data
-    """
+            if data is None or data.empty:
+                return pd.DataFrame()
 
-    stock = yf.Ticker(ticker)
+            data = data.reset_index()
+            return data
 
-    data = stock.history(period=period)
+        except Exception as e:
+            error_name = type(e).__name__
 
-    return data
+            if "YFRateLimitError" in error_name or "rate" in str(e).lower():
+                if attempt < 2:
+                    time.sleep(3 * (attempt + 1))
+                    continue
+                return pd.DataFrame()
+
+            return pd.DataFrame()
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def fetch_company_info(ticker):
-    """
-    Fetch basic company information.
+    ticker = ticker.strip().upper()
 
-    Parameters:
-        ticker (str): Stock ticker symbol
-
-    Returns:
-        dict: Company information
-    """
-
-    stock = yf.Ticker(ticker)
-
-    info = stock.info
-
-    company_data = {
-        "name": info.get("longName"),
-        "sector": info.get("sector"),
-        "industry": info.get("industry"),
-        "market_cap": info.get("marketCap"),
-        "current_price": info.get("currentPrice"),
-        "52_week_high": info.get("fiftyTwoWeekHigh"),
-        "52_week_low": info.get("fiftyTwoWeekLow"),
-        "description": info.get("longBusinessSummary")
-    }
-
-    return company_data
+    try:
+        stock = yf.Ticker(ticker)
+        info = stock.info
+        return info if info else {}
+    except Exception:
+        return {}
