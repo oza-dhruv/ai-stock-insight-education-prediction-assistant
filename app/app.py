@@ -38,11 +38,11 @@ if st.button("Analyze"):
 
     # Data
     if analyze:
-    stock_data = fetch_stock_data(ticker)
+        stock_data = fetch_stock_data(ticker)
 
-    if stock_data.empty:
-        st.warning("Could not load stock data right now. Yahoo Finance may be temporarily rate limiting requests.")
-        st.stop()
+        if stock_data.empty:
+            st.warning("Could not load stock data right now. Yahoo Finance may be temporarily rate limiting requests.")
+            st.stop()
     company_info = fetch_company_info(ticker)
 
     enriched_data = add_technical_indicators(stock_data)
